@@ -32,6 +32,9 @@ def _migrated_database():
 
 @pytest.fixture(autouse=True)
 def _clean_tables():
+    from app.core.ratelimit import limiter
+
+    limiter.reset()
     yield
     # TRUNCATE não passa pelo RLS, então limpa tudo entre um teste e outro.
     with engine.begin() as conn:

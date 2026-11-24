@@ -9,6 +9,7 @@ from app.api.routes import (
     me,
     members,
     professionals,
+    public,
     services,
     time_blocks,
 )
@@ -39,6 +40,7 @@ api.include_router(professionals.router)
 api.include_router(time_blocks.router)
 api.include_router(clients.router)
 api.include_router(appointments.router)
+api.include_router(public.router)
 
 app.include_router(health.router)
 app.include_router(api)

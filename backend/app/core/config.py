@@ -30,6 +30,16 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:5173"]
 
+    # Atrás de proxy (Render/Railway/Cloudflare) o IP real vem em X-Forwarded-For.
+    # Só ligar quando a API NÃO estiver exposta direto, senão o cabeçalho é forjável.
+    trust_proxy_headers: bool = False
+
+    # Limites da página pública (por IP).
+    public_read_per_min: int = 120
+    public_booking_per_hour: int = 10
+    # Agendamentos futuros em aberto que um mesmo telefone pode ter pelo link.
+    public_max_open_per_phone: int = 3
+
     @model_validator(mode="after")
     def _producao_segura(self) -> "Settings":
         if self.environment == "production":

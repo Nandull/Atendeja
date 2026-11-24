@@ -32,7 +32,12 @@ def update_tenant(
             ZoneInfo(changes["timezone"])
         except (ZoneInfoNotFoundError, ValueError):
             raise HTTPException(422, "Fuso horário inválido.") from None
+    nullable = {"phone", "address", "booking_note"}
     for field, value in changes.items():
+        if value is None and field not in nullable:
+            continue  # campo obrigatório: null significa "não mexer"
+        if isinstance(value, str):
+            value = value.strip() or (None if field in nullable else value)
         setattr(ctx.tenant, field, value)
     ctx.db.commit()
     return TenantOut.model_validate(ctx.tenant)

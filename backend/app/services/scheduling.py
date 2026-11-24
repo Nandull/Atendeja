@@ -117,36 +117,47 @@ def find_conflict(
     return db.scalar(query.limit(1))
 
 
-def available_slots(
+def free_slots(
     db: Session,
     *,
     tenant_id: uuid.UUID,
     professional: Professional,
     terms: ServiceTerms,
-    day: date,
+    first_day: date,
+    last_day: date,
     tz: ZoneInfo,
-    now: datetime,
+    earliest: datetime,
     step_min: int = 15,
-) -> list[datetime]:
-    """Horários de início livres no dia (no fuso do estabelecimento).
+) -> dict[date, list[datetime]]:
+    """Horários de início livres em um intervalo de dias (no fuso do estabelecimento).
 
-    Um horário é livre se o atendimento cabe inteiro no expediente e o período
-    ocupado (duração + intervalo) não encosta em bloqueio nem em outro atendimento.
+    Um horário é livre se o atendimento cabe inteiro no expediente, começa a
+    partir de `earliest` e o período ocupado (duração + intervalo) não encosta
+    em bloqueio nem em outro atendimento.
+
+    Faz só 3 consultas para o intervalo inteiro (expediente, agendamentos e
+    bloqueios), então montar a semana da página pública continua rápido.
     """
-    ranges = _ranges_for(db, professional.id, day.weekday())
-    if not ranges:
-        return []
-    day_start = datetime.combine(day, time.min, tzinfo=tz)
-    day_end = day_start + timedelta(days=1)
+    hours: dict[int, list[WorkingHour]] = {}
+    for wh in db.scalars(
+        select(WorkingHour)
+        .where(WorkingHour.professional_id == professional.id)
+        .order_by(WorkingHour.start_time)
+    ):
+        hours.setdefault(wh.weekday, []).append(wh)
+    if not hours or last_day < first_day:
+        return {}
 
+    range_start = datetime.combine(first_day, time.min, tzinfo=tz)
+    range_end = datetime.combine(last_day + timedelta(days=1), time.min, tzinfo=tz)
     busy: list[tuple[datetime, datetime]] = [
         (a.starts_at, a.blocked_until)
         for a in db.scalars(
             select(Appointment).where(
                 Appointment.professional_id == professional.id,
                 Appointment.status.in_([s.value for s in OCCUPYING]),
-                Appointment.starts_at < day_end,
-                Appointment.blocked_until > day_start,
+                Appointment.starts_at < range_end,
+                Appointment.blocked_until > range_start,
             )
         )
     ]
@@ -159,20 +170,50 @@ def available_slots(
                     TimeBlock.professional_id == professional.id,
                     TimeBlock.professional_id.is_(None),
                 ),
-                TimeBlock.starts_at < day_end,
-                TimeBlock.ends_at > day_start,
+                TimeBlock.starts_at < range_end,
+                TimeBlock.ends_at > range_start,
             )
         )
     ]
 
     step = timedelta(minutes=step_min)
-    slots: list[datetime] = []
-    for wh in ranges:
-        t = datetime.combine(day, wh.start_time, tzinfo=tz)
-        range_end = datetime.combine(day, wh.end_time, tzinfo=tz)
-        while t + terms.duration <= range_end:
-            occupied_until = t + terms.duration + terms.buffer
-            if t >= now and not any(s < occupied_until and e > t for s, e in busy):
-                slots.append(t)
-            t += step
-    return slots
+    result: dict[date, list[datetime]] = {}
+    day = first_day
+    while day <= last_day:
+        slots: list[datetime] = []
+        for wh in hours.get(day.weekday(), []):
+            t = datetime.combine(day, wh.start_time, tzinfo=tz)
+            range_close = datetime.combine(day, wh.end_time, tzinfo=tz)
+            while t + terms.duration <= range_close:
+                occupied_until = t + terms.duration + terms.buffer
+                if t >= earliest and not any(s < occupied_until and e > t for s, e in busy):
+                    slots.append(t)
+                t += step
+        result[day] = slots
+        day += timedelta(days=1)
+    return result
+
+
+def available_slots(
+    db: Session,
+    *,
+    tenant_id: uuid.UUID,
+    professional: Professional,
+    terms: ServiceTerms,
+    day: date,
+    tz: ZoneInfo,
+    now: datetime,
+    step_min: int = 15,
+) -> list[datetime]:
+    """Horários livres de um único dia (usado pela agenda interna)."""
+    return free_slots(
+        db,
+        tenant_id=tenant_id,
+        professional=professional,
+        terms=terms,
+        first_day=day,
+        last_day=day,
+        tz=tz,
+        earliest=now,
+        step_min=step_min,
+    ).get(day, [])
