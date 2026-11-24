@@ -71,9 +71,11 @@ ruff check .        # lint
 - **A API nunca conecta como superusuário.** Superusuário ignora RLS. O usuário `atendeja` é criado sem `SUPERUSER` e sem `BYPASSRLS`, e há um teste que falha se isso mudar.
 - **Tabela nova com `tenant_id`?** Na migração, chame `op.execute(enable_tenant_rls("nome_da_tabela"))` (de `app/db/rls.py`).
 - **Login com cookie httpOnly** (o JavaScript da página não consegue ler o token) e também `Authorization: Bearer`, para o Swagger e um futuro app mobile. Em produção, frontend e API ficam no mesmo domínio (`app.` e `api.atendeja.com.br`) com `COOKIE_SECURE=true`.
+- **Chaves estrangeiras compostas `(tenant_id, id)`.** Além do RLS, o banco impede ligar um registro a outro de estabelecimento diferente (ex.: profissional de A com serviço de B).
+- **Dinheiro em centavos e telefone só com dígitos.** `price_cents: 15000` = R$ 150,00; `phone: "21999990000"` (a API aceita com máscara e normaliza).
 - **Perfil checado no banco a cada requisição.** Se alguém é removido da equipe, perde o acesso na hora, sem esperar o token vencer.
 
-## API disponível (Etapa 1)
+## API disponível
 
 | Método | Rota | O que faz |
 | --- | --- | --- |
@@ -86,6 +88,16 @@ ruff check .        # lint
 | GET / PATCH | `/api/v1/tenant` | Dados do estabelecimento (editar: dono ou admin) |
 | GET / POST | `/api/v1/members` | Lista e adiciona pessoas da equipe |
 | PATCH / DELETE | `/api/v1/members/{id}` | Muda perfil ou remove da equipe |
+| GET / POST | `/api/v1/services` | Catálogo de serviços (criar/editar: dono ou admin) |
+| GET / PATCH | `/api/v1/services/{id}` | Detalhe e edição (`active: false` desativa) |
+| GET / POST | `/api/v1/professionals` | Profissionais com serviços e expediente |
+| GET / PATCH | `/api/v1/professionals/{id}` | Detalhe e edição |
+| PUT | `/api/v1/professionals/{id}/services` | Define quais serviços ele faz (e preço próprio, se houver) |
+| PUT | `/api/v1/professionals/{id}/working-hours` | Define o expediente semanal (várias faixas por dia) |
+| GET / POST | `/api/v1/time-blocks` | Bloqueios de agenda por período; sem profissional = estabelecimento inteiro |
+| DELETE | `/api/v1/time-blocks/{id}` | Remove bloqueio |
+| GET / POST | `/api/v1/clients` | Clientes com busca `?q=` por nome (sem acento) ou telefone, paginada |
+| GET / PATCH | `/api/v1/clients/{id}` | Detalhe e edição |
 | GET | `/health` | Verificação de saúde |
 
 Perfis: `owner` (dono), `admin` (gerente), `receptionist` (recepção), `professional` (profissional).

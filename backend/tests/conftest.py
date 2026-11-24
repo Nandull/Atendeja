@@ -35,7 +35,7 @@ def _clean_tables():
     yield
     # TRUNCATE não passa pelo RLS, então limpa tudo entre um teste e outro.
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE memberships, users, tenants CASCADE"))
+        conn.execute(text("TRUNCATE tenants, users CASCADE"))
 
 
 def make_client() -> TestClient:
