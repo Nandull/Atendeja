@@ -16,6 +16,10 @@ export interface Tenant {
   address: string | null;
   plan: string;
   status: string;
+  booking_enabled: boolean;
+  booking_min_notice_min: number;
+  booking_window_days: number;
+  booking_note: string | null;
 }
 
 export interface Session {
@@ -164,3 +168,59 @@ export const STATUS_LABEL: Record<AppointmentStatus, string> = {
   canceled: "Cancelado",
   no_show: "Faltou",
 };
+
+// ---- Página pública de agendamento ----
+export interface PublicProfessional {
+  id: string;
+  name: string;
+  specialty: string | null;
+  color: string;
+  price_cents: number;
+}
+
+export interface PublicService {
+  id: string;
+  name: string;
+  description: string | null;
+  duration_min: number;
+  price_cents: number;
+  price_varies: boolean;
+  professionals: PublicProfessional[];
+}
+
+export interface PublicBusiness {
+  name: string;
+  slug: string;
+  niche: string;
+  phone: string | null;
+  address: string | null;
+  timezone: string;
+  note: string | null;
+  min_notice_min: number;
+  window_days: number;
+  services: PublicService[];
+}
+
+export interface PublicDay {
+  date: string;
+  slots: { starts_at: string; professional_id: string }[];
+}
+
+export interface PublicAvailability {
+  service_id: string;
+  professional_id: string | null;
+  days: PublicDay[];
+}
+
+export interface PublicBooking {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  service: string;
+  professional: string;
+  price_cents: number;
+  business_name: string;
+  business_phone: string | null;
+  business_address: string | null;
+  timezone: string;
+}

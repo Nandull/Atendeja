@@ -27,7 +27,7 @@ from app.schemas.auth import (
     TenantOut,
     UserOut,
 )
-from app.services.slugs import slug_candidates, slugify
+from app.services.slugs import is_reserved, slug_candidates, slugify
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -105,6 +105,10 @@ def signup(payload: SignupIn, response: Response) -> SessionOut:
         set_rls_context(db, tenant_id=tenant_id, user_id=user_id)
 
         base_slug = slugify(payload.slug or payload.business_name)
+        if payload.slug and is_reserved(base_slug):
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Este endereço de link é reservado. Escolha outro."
+            )
         # Com slug escolhido pelo usuário, não inventamos variações: avisamos.
         candidates = [base_slug] if payload.slug else slug_candidates(base_slug)
         tenant = None

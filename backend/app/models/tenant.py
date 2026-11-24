@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Uuid
+from sqlalchemy import Boolean, DateTime, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin
@@ -22,3 +22,8 @@ class Tenant(TimestampMixin, Base):
     plan: Mapped[str] = mapped_column(String(20), nullable=False, default="trial")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
     trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Agendamento online (página pública /slug).
+    booking_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    booking_min_notice_min: Mapped[int] = mapped_column(Integer, nullable=False, default=120)
+    booking_window_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    booking_note: Mapped[str | None] = mapped_column(String(500))

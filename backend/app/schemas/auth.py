@@ -59,6 +59,10 @@ class TenantOut(BaseModel):
     address: str | None
     plan: str
     status: str
+    booking_enabled: bool
+    booking_min_notice_min: int
+    booking_window_days: int
+    booking_note: str | None
 
 
 class TenantChoice(BaseModel):
