@@ -6,6 +6,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/api/auth";
 import { Spinner } from "@/components/ui";
 import { Layout } from "@/components/Layout";
+import { AgendaPage } from "@/pages/Agenda";
 import { BlocksPage } from "@/pages/Blocks";
 import { ClientsPage } from "@/pages/Clients";
 import { HomePage } from "@/pages/Home";
@@ -44,6 +45,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/cadastro" element={<PublicOnly><SignupPage /></PublicOnly>} />
             <Route element={<Private />}>
               <Route index element={<HomePage />} />
+              <Route path="agenda" element={<AgendaPage />} />
               <Route path="clientes" element={<ClientsPage />} />
               <Route path="servicos" element={<ServicesPage />} />
               <Route path="profissionais" element={<ProfessionalsPage />} />

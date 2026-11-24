@@ -17,6 +17,7 @@ import {
   Spinner,
   Textarea,
 } from "@/components/ui";
+import { ClientHistory } from "@/components/ClientHistory";
 import { formatPhone, whatsappLink } from "@/lib/format";
 
 const PAGE_SIZE = 25;
@@ -228,6 +229,12 @@ function ClientForm({
         <Button type="button" variant="secondary" onClick={onDone}>Cancelar</Button>
         <Button type="submit" loading={save.isPending}>Salvar</Button>
       </div>
+      {client && (
+        <section className="border-t border-slate-200 pt-4">
+          <h3 className="mb-3 font-semibold">Histórico</h3>
+          <ClientHistory clientId={client.id} />
+        </section>
+      )}
     </form>
   );
 }

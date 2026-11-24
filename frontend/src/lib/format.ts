@@ -44,3 +44,14 @@ export function whatsappLink(phoneDigits: string, text?: string): string {
   const url = `https://wa.me/55${phoneDigits}`;
   return text ? `${url}?text=${encodeURIComponent(text)}` : url;
 }
+
+const dateOnly = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+export const formatDate = (iso: string) => dateOnly.format(new Date(iso));
+
+const timeOnly = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+export const formatTime = (iso: string) => timeOnly.format(new Date(iso));
+
+/** Data local AAAA-MM-DD (sem converter para UTC). */
+export const localDate = (d: Date) => d.toLocaleDateString("sv-SE");
+/** Hora local HH:MM. */
+export const localTime = (d: Date) => d.toTimeString().slice(0, 5);

@@ -115,3 +115,52 @@ export const NICHE_LABEL: Record<string, string> = {
 };
 
 export const WEEKDAYS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+
+export type AppointmentStatus = "scheduled" | "confirmed" | "completed" | "canceled" | "no_show";
+
+export interface Appointment {
+  id: string;
+  client: { id: string; name: string; phone: string };
+  professional: { id: string; name: string; color: string };
+  service: { id: string; name: string };
+  starts_at: string;
+  ends_at: string;
+  blocked_until: string;
+  status: AppointmentStatus;
+  price_cents: number;
+  origin: string;
+  notes: string | null;
+  cancel_reason: string | null;
+  created_at: string;
+}
+
+export interface Slots {
+  date: string;
+  professional_id: string;
+  service_id: string;
+  duration_min: number;
+  price_cents: number;
+  slots: string[];
+}
+
+export interface ClientHistory {
+  stats: {
+    completed: number;
+    no_show: number;
+    canceled: number;
+    upcoming: number;
+    total_spent_cents: number;
+    first_visit: string | null;
+    last_visit: string | null;
+    avg_days_between_visits: number | null;
+  };
+  appointments: Appointment[];
+}
+
+export const STATUS_LABEL: Record<AppointmentStatus, string> = {
+  scheduled: "Agendado",
+  confirmed: "Confirmado",
+  completed: "Atendido",
+  canceled: "Cancelado",
+  no_show: "Faltou",
+};

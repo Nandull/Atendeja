@@ -2,6 +2,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import (
+    appointments,
     auth,
     clients,
     health,
@@ -37,6 +38,7 @@ api.include_router(services.router)
 api.include_router(professionals.router)
 api.include_router(time_blocks.router)
 api.include_router(clients.router)
+api.include_router(appointments.router)
 
 app.include_router(health.router)
 app.include_router(api)

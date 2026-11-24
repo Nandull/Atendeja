@@ -84,6 +84,9 @@ ruff check .        # lint
 - **Tabela nova com `tenant_id`?** Na migração, chame `op.execute(enable_tenant_rls("nome_da_tabela"))` (de `app/db/rls.py`).
 - **Login com cookie httpOnly** (o JavaScript da página não consegue ler o token) e também `Authorization: Bearer`, para o Swagger e um futuro app mobile. Em produção, frontend e API ficam no mesmo domínio (`app.` e `api.atendeja.com.br`) com `COOKIE_SECURE=true`.
 - **Chaves estrangeiras compostas `(tenant_id, id)`.** Além do RLS, o banco impede ligar um registro a outro de estabelecimento diferente (ex.: profissional de A com serviço de B).
+- **Conflito de horário barrado no banco.** A constraint `EXCLUDE USING gist` em `appointments` impede dois atendimentos sobrepostos do mesmo profissional, contando o intervalo de limpeza do serviço. Vale mesmo com dois cliques no mesmo segundo.
+- **Preço congelado no agendamento.** Mudar o catálogo depois não altera o que foi combinado com o cliente.
+- **View `v_client_stats`** com atendimentos, faltas, gasto e última visita por cliente, pronta para Power BI.
 - **Dinheiro em centavos e telefone só com dígitos.** `price_cents: 15000` = R$ 150,00; `phone: "21999990000"` (a API aceita com máscara e normaliza).
 - **Perfil checado no banco a cada requisição.** Se alguém é removido da equipe, perde o acesso na hora, sem esperar o token vencer.
 
@@ -110,6 +113,11 @@ ruff check .        # lint
 | DELETE | `/api/v1/time-blocks/{id}` | Remove bloqueio |
 | GET / POST | `/api/v1/clients` | Clientes com busca `?q=` por nome (sem acento) ou telefone, paginada |
 | GET / PATCH | `/api/v1/clients/{id}` | Detalhe e edição |
+| GET / POST | `/api/v1/appointments` | Agenda por período (`start`, `end`, `professional_id`) e novo agendamento |
+| GET / PATCH | `/api/v1/appointments/{id}` | Detalhe e reagendamento (horário, profissional ou serviço) |
+| POST | `/api/v1/appointments/{id}/status` | Confirmar, concluir, falta ou cancelar (com motivo) |
+| GET | `/api/v1/availability` | Horários livres de um profissional para um serviço num dia |
+| GET | `/api/v1/clients/{id}/history` | Histórico e indicadores do cliente (frequência, gasto, faltas) |
 | GET | `/health` | Verificação de saúde |
 
 Perfis: `owner` (dono), `admin` (gerente), `receptionist` (recepção), `professional` (profissional).
