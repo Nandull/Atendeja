@@ -2,12 +2,13 @@ import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentContext, get_current_context
 from app.api.utils import escape_like, get_or_404
-from app.models import Client
+from app.models import Appointment, Client, Role
+from app.schemas.appointment import ClientHistory, ClientStats
 from app.schemas.catalog import ClientCreate, ClientOut, ClientPage, ClientUpdate
 from app.services.text import normalize_search
 
@@ -95,3 +96,45 @@ def update_client(
         ctx.db.rollback()
         raise _duplicate_phone(ctx, client.phone) from None
     return client
+
+
+@router.get("/{client_id}/history", response_model=ClientHistory)
+def client_history(
+    client_id: uuid.UUID,
+    limit: int = Query(default=50, ge=1, le=200),
+    ctx: CurrentContext = Depends(get_current_context),
+) -> ClientHistory:
+    """Histórico de atendimentos e indicadores do cliente (frequência, gasto)."""
+    from app.api.routes.appointments import to_out  # evita import circular
+
+    client = get_or_404(ctx, Client, client_id, "Cliente")
+    stats_row = ctx.db.execute(
+        text("SELECT * FROM v_client_stats WHERE client_id = :id"), {"id": client.id}
+    ).one()
+
+    avg_gap = None
+    if stats_row.completed >= 2:
+        span_days = (stats_row.last_visit - stats_row.first_visit).total_seconds() / 86400
+        avg_gap = round(span_days / (stats_row.completed - 1), 1)
+
+    query = (
+        select(Appointment)
+        .where(Appointment.tenant_id == ctx.tenant.id, Appointment.client_id == client.id)
+        .order_by(Appointment.starts_at.desc())
+        .limit(limit)
+    )
+    if ctx.role == Role.PROFESSIONAL:
+        query = query.where(Appointment.professional.has(user_id=ctx.user.id))
+    return ClientHistory(
+        stats=ClientStats(
+            completed=stats_row.completed,
+            no_show=stats_row.no_show,
+            canceled=stats_row.canceled,
+            upcoming=stats_row.upcoming,
+            total_spent_cents=stats_row.total_spent_cents,
+            first_visit=stats_row.first_visit,
+            last_visit=stats_row.last_visit,
+            avg_days_between_visits=avg_gap,
+        ),
+        appointments=[to_out(a) for a in ctx.db.scalars(query)],
+    )

@@ -13,3 +13,28 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+/* FullCalendar com a identidade do AtendeJá */
+.agenda {
+  --fc-border-color: var(--color-slate-200);
+  --fc-button-bg-color: #ffffff;
+  --fc-button-border-color: var(--color-slate-300);
+  --fc-button-text-color: var(--color-slate-700);
+  --fc-button-hover-bg-color: var(--color-slate-50);
+  --fc-button-hover-border-color: var(--color-slate-300);
+  --fc-button-active-bg-color: var(--color-brand-700);
+  --fc-button-active-border-color: var(--color-brand-700);
+  --fc-today-bg-color: var(--color-brand-50);
+  --fc-now-indicator-color: #dc2626;
+  font-size: 0.8125rem;
+}
+.agenda .fc .fc-button { box-shadow: none; text-transform: capitalize; }
+.agenda .fc .fc-button-primary:not(:disabled).fc-button-active { color: #fff; }
+.agenda .fc .fc-toolbar-title { font-size: 1.05rem; font-weight: 600; }
+.agenda .fc-event { cursor: pointer; }
+.agenda .fc-timegrid-slot { height: 1.4rem; }
+.agenda .st-canceled .fc-event-title { text-decoration: line-through; }
+.agenda .st-no_show { border-width: 2px; }
+@media (max-width: 640px) {
+  .agenda .fc .fc-toolbar { flex-direction: column; gap: 0.5rem; }
+}

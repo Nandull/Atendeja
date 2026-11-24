@@ -1,3 +1,4 @@
+from app.models.appointment import Appointment, AppointmentStatus
 from app.models.catalog import (
     Client,
     Professional,
@@ -11,6 +12,8 @@ from app.models.tenant import Tenant
 from app.models.user import User
 
 __all__ = [
+    "Appointment",
+    "AppointmentStatus",
     "Client",
     "Membership",
     "Professional",
