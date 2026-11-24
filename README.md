@@ -8,6 +8,7 @@ O plano completo (nicho, arquitetura, stack, modelo de dados e etapas) está em 
 
 ```
 atendeja/
+├── frontend/             Painel web em React + TypeScript + Tailwind
 ├── backend/              API em Python (FastAPI)
 │   ├── app/
 │   │   ├── api/          rotas HTTP e dependências (autenticação, perfis)
@@ -23,7 +24,6 @@ atendeja/
 └── docker-compose.yml    ambiente local completo
 ```
 
-O frontend (React) entra na Etapa 2, junto com as telas de cadastro.
 
 ## Rodando localmente
 
@@ -56,6 +56,18 @@ cp .env.example .env             # ajuste JWT_SECRET
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
+
+### Frontend
+
+Com a API rodando em `localhost:8000`:
+
+```bash
+cd frontend
+npm install
+npm run dev      # http://localhost:5173
+```
+
+Em desenvolvimento, o Vite repassa `/api` para a API, então front e API ficam na mesma origem e o login por cookie funciona sem configuração. Em produção, defina `VITE_API_URL` com o endereço da API.
 
 ### Testes
 
